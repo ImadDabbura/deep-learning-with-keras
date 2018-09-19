@@ -1,2 +1,3 @@
-# deeplearning_with_keras
-Deep Learning with Keras
+# Deep Learning with Keras
+
+Solving deep learning problems using Keras.
