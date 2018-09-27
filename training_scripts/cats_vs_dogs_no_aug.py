@@ -1,5 +1,6 @@
 '''
-Train cats-vs-dogs dataset using simple CNN with no data augmentation.
+Train simple CNN on cats-vs-dogs dataset with no data augmentation.
+Dataset can be found here: https://www.kaggle.com/c/dogs-vs-cats.
 '''
 
 

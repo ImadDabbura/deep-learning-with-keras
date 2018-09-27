@@ -1,5 +1,6 @@
 '''
-Train cats-vs-dogs dataset using simple CNN with data augmentation.
+Train simple CNN on cats-vs-dogs dataset with data augmentation.
+Dataset can be found here: https://www.kaggle.com/c/dogs-vs-cats.
 '''
 
 
@@ -12,8 +13,6 @@ from keras.callbacks import TensorBoard
 from keras.preprocessing import image
 from keras.preprocessing.image import ImageDataGenerator
 from keras.applications import vgg16
-from warnings import filterwarnings
-filterwarnings('ignore')
 
 
 def train(args):
