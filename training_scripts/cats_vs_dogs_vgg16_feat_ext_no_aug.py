@@ -1,6 +1,9 @@
 '''
 Train a classifier NN using the CNN base of VGG16 as a feature extraction
-module on cats-vs-dogs dataset.
+module on cats-vs-dogs dataset. Steps of training:
+1. Run train, valid, and test images through conv_base and save them on desk.
+2. Train the classifier on the output from conv_base.
+3. Evaluate the model using test features and labels obtained from conv_base.
 Dataset can be found here: https://www.kaggle.com/c/dogs-vs-cats.
 '''
 
@@ -52,7 +55,7 @@ def train(args, train_features, train_labels, valid_features, valid_labels):
     model.add(Dense(1, activation='sigmoid'))
 
     # Compile model
-    model.compile(optimizer=optimizers.rmsprop(lr=1e-5),
+    model.compile(optimizer=optimizers.RMSprop(lr=1e-5),
                   loss='binary_crossentropy',
                   metrics=['acc'])
 
