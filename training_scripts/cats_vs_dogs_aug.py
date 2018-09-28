@@ -17,24 +17,24 @@ from keras.applications import vgg16
 
 def train(args):
     # Build data generators
-    train_data_gen = ImageDataGenerator(rescale=1/255)
-    test_data_gen = ImageDataGenerator(rescale=1/255,
-                                      horizontal_flip=True,
-                                      height_shift_range=0.2,
-                                      width_shift_range=0.2,
-                                      rotation_range=40,
-                                      zoom_range=0.2,
-                                      shear_range=0.2,
-                                      fill_mode='nearest')
+    train_data_gen = ImageDataGenerator(rescale=1/255,
+                                        horizontal_flip=True,
+                                        height_shift_range=0.2,
+                                        width_shift_range=0.2,
+                                        rotation_range=40,
+                                        zoom_range=0.2,
+                                        shear_range=0.2,
+                                        fill_mode='nearest')
+    test_data_gen = ImageDataGenerator(rescale=1/255)
     train_gen = train_data_gen.flow_from_directory(args.train_dir,
+                                                   target_size=(150, 150),
+                                                   batch_size=args.batch_size,
+                                                   class_mode='binary')
+    valid_gen = test_data_gen.flow_from_directory(args.valid_dir,
                                                   target_size=(150, 150),
                                                   batch_size=args.batch_size,
                                                   class_mode='binary')
-    valid_gen = test_data_gen.flow_from_directory(args.valid_dir,
-                                                 target_size=(150, 150),
-                                                 batch_size=args.batch_size,
-                                                 class_mode='binary')
-    
+
     # Build model
     model = models.Sequential()
     model.add(Conv2D(32, 3, activation='relu', input_shape=(150, 150, 3)))
@@ -51,24 +51,26 @@ def train(args):
 
     # Compile model
     model.compile(optimizer='rmsprop',
-                 loss='binary_crossentropy',
-                 metrics=['acc'])
-    
+                  loss='binary_crossentropy',
+                  metrics=['acc'])
+
     train_dir_size = len(os.listdir(os.path.join(
-                                args.train_dir, os.listdir(args.train_dir)[0])))
+                            args.train_dir, os.listdir(args.train_dir)[0])))
     valid_dir_size = len(os.listdir(os.path.join(
-                                args.valid_dir, os.listdir(args.valid_dir)[0])))
-    
+                            args.valid_dir, os.listdir(args.valid_dir)[0])))
+    steps_per_epoch = (2 * train_dir_size) / args.batch_size
+    validation_steps = (2 * valid_dir_size) / args.batch_size
+
     # Fit the model
     print('Start training ....')
     history = model.fit_generator(train_gen,
-                                 steps_per_epoch=(2 * train_dir_size) / args.batch_size,
-                                 epochs=args.epochs,
-                                 validation_data=valid_gen,
-                                 validation_steps=(2 * valid_dir_size) / args.batch_size,
-                                 verbose=args.verbose)
+                                  steps_per_epoch=steps_per_epoch,
+                                  epochs=args.epochs,
+                                  validation_data=valid_gen,
+                                  validation_steps=validation_steps,
+                                  verbose=args.verbose)
     print('Training is done.')
-    
+
     # Save model
     if not os.path.exists('models/'):
         os.mkdir('models')
@@ -98,12 +100,12 @@ def main():
                         help='Directory containing test images')
     parser.add_argument('--batch_size', type=int, default=20, metavar='',
                         help='Batch size to be used when training the CNN')
-    parser.add_argument('--epochs', type=int, default=20 , metavar='',
+    parser.add_argument('--epochs', type=int, default=20, metavar='',
                         help='Number of full training cycles')
-    parser.add_argument('-v', '--verbose', default=0 , action='count',
-                        help='Verbosity mode')               
+    parser.add_argument('-v', '--verbose', default=0, action='count',
+                        help='Verbosity mode')
     args = parser.parse_args()
-    
+
     model = train(args)
     test(args, model)
 
