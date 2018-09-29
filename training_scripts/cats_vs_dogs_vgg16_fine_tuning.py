@@ -110,7 +110,7 @@ def train(args):
     # Save model
     if not os.path.exists('models/'):
         os.mkdir('models')
-    model.save('models/cats-vs-dogs-samll-vgg16-feat-ext.h5')
+    model.save('models/cats-vs-dogs-samll-vgg16-fine-tune.h5')
 
     return model
 
