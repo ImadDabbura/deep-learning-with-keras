@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from keras.preprocessing.image import ImageDataGenerator
+from keras.preprocessing import image
 
 
 def plot_loss_and_metric(history, metric_name='accuracy'):
@@ -49,57 +50,69 @@ def feature_extraction(directory, conv_base, num_examples, batch_size=20):
     return features_extracted, labels
 
 
-def plot_conv_outputs(model, activations):
-    # These are the names of the layers
-    layer_names = [layer.name for layer in model.layers[:8]]
-    # Since the filters are multiple of 16 --> Use 16 images per row
-    images_per_row = 16
+def plot_conv_outputs(model, img_path, images_per_row=16):
+    '''
+    Plot output of convolutional layers (activations) in a CNN.
+    '''
+    # Convert the image into tensor
+    img = image.load_img(img_path, target_size=(150, 150))
+    img = image.img_to_array(img)
+    img = np.reshape(img, ((1,) + img.shape))
+    img /= 255
+
+    # Get the the activations
+    activations = model.predict(img)
+
+    # These are the names of the layers, so can have them as part of our plot
+    layer_names = [layer.name for layer in model.layers[1:]]
 
     # Now let's display our feature maps
     for layer_name, layer_activation in zip(layer_names, activations):
-        # Get num of features, size, & num of columns (1,size,size,features)
+        # This is the number of features in the feature map
         n_features = layer_activation.shape[-1]
-        size = layer_activation.shape[1]
-        n_cols = n_features // images_per_row
 
-        # Initialize display grid
-        grid = np.zeros((size * n_cols, images_per_row * size))
+        # The feature map has shape (1, size, size, n_features)
+        size = layer_activation.shape[1]
+
+        # We will tile the activation channels in this matrix
+        n_cols = n_features // images_per_row
+        display_grid = np.zeros((size * n_cols, images_per_row * size))
 
         # We'll tile each filter into this big horizontal grid
         for col in range(n_cols):
             for row in range(images_per_row):
-                channel_img = layer_activation[0,
-                                               :, :,
-                                               col * images_per_row + row]
+                channel_image = layer_activation[
+                    0, :, :, col * images_per_row + row
+                    ]
+
                 # Post-process the feature to make it visually palatable
-                channel_img -= channel_img.mean()
-                channel_img /= channel_img.std()
-                channel_img *= 64
-                channel_img += 128
-                channel_img = np.clip(channel_img, 0, 255).astype('uint8')
-                grid[col * size: (col + 1) * size,
-                     row * size: (row + 1) * size] = channel_img
+                channel_image -= channel_image.mean()
+                channel_image /= channel_image.std()
+                channel_image *= 64
+                channel_image += 128
+                channel_image = np.clip(channel_image, 0, 255).astype('uint8')
+                display_grid[col * size: (col + 1) * size,
+                             row * size: (row + 1) * size] = channel_image
 
         # Display the grid
         scale = 1. / size
-        plt.figure(figsize=(scale * grid.shape[1],
-                            scale * grid.shape[0]))
+        plt.figure(figsize=(scale * display_grid.shape[1],
+                            scale * display_grid.shape[0]))
         plt.title(layer_name)
-        plt.axis('off')
-        plt.imshow(grid, aspect='auto', cmap='viridis')
-    plt.show()
+        plt.grid(False)
+        plt.imshow(display_grid, aspect='auto', cmap='viridis')
 
 
 def smooth_curve(points, factor=0.9):
     '''Add smoothness to set of points.'''
     smooth_points = []
-    
+
     for point in points:
         if smooth_points:
             previous = smooth_points[-1]
             smooth_points.append(factor * previous + (1 - factor) * point)
-        
+
         else:
             smooth_points.append(point)
-            
+
     return smooth_points
