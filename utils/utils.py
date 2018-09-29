@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing import image
+import keras.backend as K
 
 
 def plot_loss_and_metric(history, metric_name='accuracy'):
@@ -101,6 +102,32 @@ def plot_conv_outputs(model, img_path, images_per_row=16):
         plt.title(layer_name)
         plt.grid(False)
         plt.imshow(display_grid, aspect='auto', cmap='viridis')
+
+
+def generate_patterns(model, layer_name, filter_index=0, iterations=50):
+    # Generate random gray image
+    random_img = np.random.random((1, 150, 150, 3)) * 20 + 128
+
+    # Define output and loss
+    output = model.get_layer(layer_name).output
+    loss = K.mean(output[:, :, :, filter_index])
+
+    # Define gradients
+    grads = K.gradients(loss, model.input)[0]
+    # Normalize gradients
+    grads /= (K.sqrt(K.mean(K.square(grads))) + 1e-5)
+
+    # Define a function that returns loss and gradients w.r.t. input
+    compute_loss_grads = K.function([model.input], [loss, grads])
+
+    # Start the gradient ascent steps
+    lr = 1
+    for i in range(iterations):
+        loss_value, grads_value = compute_loss_grads([random_img])
+        random_img += lr * grads_value
+
+    img = random_img[0]
+    return deprocess_image(img)
 
 
 def smooth_curve(points, factor=0.9):
