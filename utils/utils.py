@@ -105,6 +105,10 @@ def plot_conv_outputs(model, img_path, images_per_row=16):
 
 
 def generate_patterns(model, layer_name, filter_index=0, iterations=50):
+    '''
+    Return what an image-like tensor that shows what the `filter_index` in 
+    `layer_name` is most responsive to.
+    '''
     # Generate random gray image
     random_img = np.random.random((1, 150, 150, 3)) * 20 + 128
 
