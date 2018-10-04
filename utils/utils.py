@@ -131,6 +131,7 @@ def generate_patterns(model, layer_name, filter_index=0, iterations=50):
         random_img += lr * grads_value
 
     img = random_img[0]
+    
     return deprocess_image(img)
 
 
@@ -147,3 +148,15 @@ def smooth_curve(points, factor=0.9):
             smooth_points.append(point)
 
     return smooth_points
+
+
+def deprocess_image(x):
+    x -= x.mean()
+    x /= (x.std() + 1e-5)
+    x *= 0.1
+    x += 0.5
+    x = np.clip(x, 0, 1)
+    x *= 255
+    x = np.clip(x, 0, 255).astype('uint8')
+    
+    return x
